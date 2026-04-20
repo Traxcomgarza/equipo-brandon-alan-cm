@@ -1,30 +1,40 @@
-# [Nombre del Sistema]
-**Equipo:** [Nombres completos]  
-**Dominio:** [Dominio elegido]  
-**Fecha:** Abril 2026
+# Sistema de Inventario
+**Equipo:** Brandon Alan Carrion Morales 
+**Dominio:** Sistema de Inventario 
+**Fecha:** 18 Abril 2026
 
 ---
 
 ## ¿Qué problema resuelve?
-[2-3 oraciones describiendo el sistema]
+Permite que la empresa tenga control de sus productos, asi mismo les permite ver
+si tienen escases de algun producto
 
 ---
 
 ## Estructura de la Base de Datos
-| Tabla | Descripción | Relación |
+
+| Tabla | Descripcion | Relacion |
 |-------|-------------|----------|
-| [tabla] | [qué guarda] | [con quién se relaciona] |
+| productos | Guarda los productos con su nombre, categoria, precio y cantidad disponible | Tabla principal |
+| movimientos | Registra cada vez que entra o sale mercancia | Se conecta con productos |
+| alertas_reposicion| Guarda las alertas cuando un producto se queda sin stock suficiente | Se conecta con productos|
 
 ---
 
 ## Rutas de la API
-| Método | Ruta | Qué hace |
+
+| Metodo | Ruta | Que hace |
 |--------|------|----------|
-| GET | / | Interfaz principal |
-| POST | /[ruta] | [descripción] |
-| GET | /[ruta] | [descripción] |
-| POST | /[ruta] | [descripción] |
-| GET | /[ruta] | [descripción] |
+| GET | `/` | Pagina principal con formularios y lista de productos |
+| GET | `/stock-page` | Pagina con el stock actual de todos los productos |
+| GET | `/alertas-page` | Pagina con las alertas de reposicion activas |
+| GET | `/stock` | Retorna los productos en formato JSON |
+| GET | `/alertas` | Retorna las alertas activas en formato JSON |
+| GET | `/productos/<id>` | Muestra el detalle de un producto especifico |
+| POST | `/productos` | Agrega un nuevo producto |
+| POST | `/movimientos` | Registra una entrada o salida de inventario |
+| POST | `/alertas/<id>/resolver` | Marca una alerta como resuelta |
+
 
 ---
 
