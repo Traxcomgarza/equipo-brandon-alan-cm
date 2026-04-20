@@ -272,8 +272,8 @@ HTML_ALERTAS_PAGE = """
     <title>Alertas - TechNova</title>
     {styles}
     <style>
-        .btn-resolver {{ background: #27ae60; padding: 4px 10px; font-size: 12px; width: auto; }}
-        .btn-resolver:hover {{ background: #219a52; }}
+        .btn-resolver { background: #27ae60; padding: 4px 10px; font-size: 12px; width: auto; }
+        .btn-resolver:hover { background: #219a52; }
     </style>
 </head>
 <body>
@@ -287,15 +287,15 @@ HTML_ALERTAS_PAGE = """
         <tbody id="tablaAlertas"></tbody>
     </table>
     <script>
-        async function cargarAlertas() {{
+        async function cargarAlertas() {
             const res = await fetch('/alertas');
             const data = await res.json();
             const tbody = document.getElementById('tablaAlertas');
             tbody.innerHTML = '';
-            if (data.length === 0) {{
+            if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#27ae60;padding:20px;">No hay alertas activas</td></tr>';
-            }}
-            data.forEach(a => {{
+            }
+            data.forEach(a => {
                 tbody.innerHTML +=
                     '<tr>' +
                     '<td>' + a.alerta_id + '</td>' +
@@ -307,17 +307,17 @@ HTML_ALERTAS_PAGE = """
                     '<td style="font-size:12px">' + a.creado_en + '</td>' +
                     '<td><button class="btn-resolver" onclick="resolver(' + a.alerta_id + ')">Resolver</button></td>' +
                     '</tr>';
-            }});
+            });
             document.getElementById('resumen_alertas').textContent =
                 data.length + ' alerta(s) activa(s)';
-        }}
+        }
 
-        async function resolver(id) {{
-            const res = await fetch('/alertas/' + id + '/resolver', {{ method: 'POST' }});
+        async function resolver(id) {
+            const res = await fetch('/alertas/' + id + '/resolver', { method: 'POST' });
             const data = await res.json();
             if (res.ok) cargarAlertas();
             else alert(data.error);
-        }}
+        }
 
         cargarAlertas();
     </script>
