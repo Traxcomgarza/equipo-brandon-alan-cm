@@ -7,7 +7,7 @@ Dominio 3: Control de stock, movimientos y alertas de reposición
 import os
 import time
 import mysql.connector
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, Response
 from dotenv import load_dotenv
 
 # Cargar variables del archivo .env si existe
@@ -329,12 +329,17 @@ HTML_ALERTAS_PAGE = """
 # ─────────────────────────────────────────────
 # RUTA 1: Interfaz HTML principal
 # ─────────────────────────────────────────────
+def render_page(template):
+    """Inyecta estilos y nav en la plantilla sin usar .format() para evitar
+    conflictos con las llaves {} del CSS y JavaScript."""
+    html = template.replace("{styles}", BASE_STYLES).replace("{nav}", BASE_NAV)
+    return Response(html, mimetype="text/html")
+
+
 @app.route("/")
 def index():
     """Retorna la interfaz HTML del sistema de inventario."""
-    return render_template_string(
-        HTML_INDEX.format(styles=BASE_STYLES, nav=BASE_NAV)
-    )
+    return render_page(HTML_INDEX)
 
 
 # ─────────────────────────────────────────────
@@ -343,9 +348,7 @@ def index():
 @app.route("/stock-page")
 def stock_page():
     """Página HTML dedicada para visualizar el stock actual."""
-    return render_template_string(
-        HTML_STOCK_PAGE.format(styles=BASE_STYLES, nav=BASE_NAV)
-    )
+    return render_page(HTML_STOCK_PAGE)
 
 
 # ─────────────────────────────────────────────
@@ -354,9 +357,7 @@ def stock_page():
 @app.route("/alertas-page")
 def alertas_page():
     """Página HTML dedicada para visualizar y gestionar alertas."""
-    return render_template_string(
-        HTML_ALERTAS_PAGE.format(styles=BASE_STYLES, nav=BASE_NAV)
-    )
+    return render_page(HTML_ALERTAS_PAGE)
 
 
 # ─────────────────────────────────────────────
