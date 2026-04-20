@@ -1,7 +1,7 @@
 """
-Sistema de Gestión de Inventario - TechNova Solutions
+Sistema de Gestion de Inventario - TechNova Solutions
 Equipo: Brandon Alan CM
-Dominio 3: Control de stock, movimientos y alertas de reposición
+Dominio 3: Control de stock, movimientos y alertas de reposicion
 """
 
 import os
@@ -15,9 +15,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# ─────────────────────────────────────────────
-# Configuración de conexión a RDS desde variables de entorno
-# ─────────────────────────────────────────────
+# Configuracion de conexion a RDS desde variables de entorno
 DB_CONFIG = {
     "host":     os.environ.get("DB_HOST"),
     "user":     os.environ.get("DB_USER"),
@@ -28,13 +26,11 @@ DB_CONFIG = {
 
 
 def get_connection():
-    """Crea y retorna una conexión a la base de datos."""
+    """Crea y retorna una conexion a la base de datos."""
     return mysql.connector.connect(**DB_CONFIG)
 
 
-# ─────────────────────────────────────────────
-# Estilos y nav compartidos entre páginas
-# ─────────────────────────────────────────────
+# Estilos y nav compartidos entre paginas
 BASE_STYLES = """
 <style>
     body { font-family: Arial, sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
@@ -61,18 +57,16 @@ BASE_STYLES = """
 """
 
 BASE_NAV = """
-<h1>&#128230; Sistema de Inventario &#8212; TechNova Solutions</h1>
+<h1>Sistema de Inventario - TechNova Solutions</h1>
 <nav>
-    <a href="/">&#127968; Inicio</a>
-    <a href="/stock-page">&#128202; Stock Actual</a>
-    <a href="/alertas-page">&#128680; Alertas</a>
+    <a href="/">Inicio</a>
+    <a href="/stock-page">Stock Actual</a>
+    <a href="/alertas-page">Alertas</a>
 </nav>
 <hr>
 """
 
-# ─────────────────────────────────────────────
-# Plantilla HTML — Página principal
-# ─────────────────────────────────────────────
+# Plantilla HTML - Pagina principal
 HTML_INDEX = """
 <!DOCTYPE html>
 <html lang="es">
@@ -123,7 +117,6 @@ HTML_INDEX = """
             const res = await fetch('/stock');
             const data = await res.json();
 
-            // Actualizar tabla
             const tbody = document.getElementById('tablaProductos');
             tbody.innerHTML = '';
             data.forEach(p => {
@@ -209,9 +202,7 @@ HTML_INDEX = """
 </html>
 """
 
-# ─────────────────────────────────────────────
-# Plantilla HTML — Página Stock Actual
-# ─────────────────────────────────────────────
+# Plantilla HTML - Pagina Stock Actual
 HTML_STOCK_PAGE = """
 <!DOCTYPE html>
 <html lang="es">
@@ -253,7 +244,7 @@ HTML_STOCK_PAGE = """
                     '</tr>';
             });
             document.getElementById('resumen').textContent =
-                'Total: ' + data.length + ' productos — ' + bajos + ' con stock bajo minimo';
+                'Total: ' + data.length + ' productos - ' + bajos + ' con stock bajo minimo';
         }
         cargarStock();
     </script>
@@ -261,9 +252,7 @@ HTML_STOCK_PAGE = """
 </html>
 """
 
-# ─────────────────────────────────────────────
-# Plantilla HTML — Página Alertas
-# ─────────────────────────────────────────────
+# Plantilla HTML - Pagina Alertas
 HTML_ALERTAS_PAGE = """
 <!DOCTYPE html>
 <html lang="es">
@@ -326,43 +315,35 @@ HTML_ALERTAS_PAGE = """
 """
 
 
-# ─────────────────────────────────────────────
-# RUTA 1: Interfaz HTML principal
-# ─────────────────────────────────────────────
 def render_page(template):
-    """Inyecta estilos y nav en la plantilla sin usar .format() para evitar
-    conflictos con las llaves {} del CSS y JavaScript."""
+    """Inyecta estilos y nav en la plantilla usando replace para evitar
+    conflictos con las llaves del CSS y JavaScript."""
     html = template.replace("{styles}", BASE_STYLES).replace("{nav}", BASE_NAV)
     return Response(html, mimetype="text/html")
 
 
+# RUTA 1: Interfaz HTML principal
 @app.route("/")
 def index():
     """Retorna la interfaz HTML del sistema de inventario."""
     return render_page(HTML_INDEX)
 
 
-# ─────────────────────────────────────────────
-# RUTA 1b: Página de Stock Actual
-# ─────────────────────────────────────────────
+# RUTA 1b: Pagina de Stock Actual
 @app.route("/stock-page")
 def stock_page():
-    """Página HTML dedicada para visualizar el stock actual."""
+    """Pagina HTML dedicada para visualizar el stock actual."""
     return render_page(HTML_STOCK_PAGE)
 
 
-# ─────────────────────────────────────────────
-# RUTA 1c: Página de Alertas
-# ─────────────────────────────────────────────
+# RUTA 1c: Pagina de Alertas
 @app.route("/alertas-page")
 def alertas_page():
-    """Página HTML dedicada para visualizar y gestionar alertas."""
+    """Pagina HTML dedicada para visualizar y gestionar alertas."""
     return render_page(HTML_ALERTAS_PAGE)
 
 
-# ─────────────────────────────────────────────
 # RUTA 2: Registrar un nuevo producto (POST)
-# ─────────────────────────────────────────────
 @app.route("/productos", methods=["POST"])
 def registrar_producto():
     """
@@ -383,7 +364,7 @@ def registrar_producto():
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Inserción con parámetros (nunca concatenación de strings)
+        # Insercion con parametros (nunca concatenacion de strings)
         sql = """
             INSERT INTO productos (nombre, categoria, precio, cantidad, stock_minimo)
             VALUES (%s, %s, %s, %s, %s)
@@ -410,15 +391,13 @@ def registrar_producto():
             conn.close()
 
 
-# ─────────────────────────────────────────────
 # RUTA 3: Registrar movimiento de inventario (POST)
-# ─────────────────────────────────────────────
 @app.route("/movimientos", methods=["POST"])
 def registrar_movimiento():
     """
     Recibe JSON con: producto_id, tipo (entrada/salida), cantidad, motivo
-    Actualiza el stock del producto y genera alerta si queda bajo mínimo.
-    La generación de alerta incluye time.sleep(5) simulando proceso costoso.
+    Actualiza el stock del producto y genera alerta si queda bajo minimo.
+    La generacion de alerta incluye time.sleep(5) simulando proceso costoso.
     """
     conn = None
     cursor = None
@@ -439,14 +418,14 @@ def registrar_movimiento():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Obtener producto actual con parámetros
+        # Obtener producto actual con parametros
         cursor.execute("SELECT * FROM productos WHERE id = %s", (data["producto_id"],))
         producto = cursor.fetchone()
 
         if not producto:
             return jsonify({"error": "Producto no encontrado"}), 404
 
-        # Calcular nuevo stock según tipo de movimiento
+        # Calcular nuevo stock segun tipo de movimiento
         if data["tipo"] == "entrada":
             nuevo_stock = producto["cantidad"] + data["cantidad"]
         else:
@@ -471,13 +450,12 @@ def registrar_movimiento():
 
         alerta_generada = False
 
-        # ── TAREA PESADA ──────────────────────────────────────────────
-        # Si es una salida y el stock queda por debajo del mínimo,
-        # se genera una alerta de reposición.
-        # time.sleep(5) simula el proceso costoso de análisis y notificación.
-        # ─────────────────────────────────────────────────────────────
+        # TAREA PESADA
+        # Si es una salida y el stock queda por debajo del minimo,
+        # se genera una alerta de reposicion.
+        # time.sleep(5) simula el proceso costoso de analisis y notificacion.
         if data["tipo"] == "salida" and nuevo_stock < producto["stock_minimo"]:
-            time.sleep(5)  # Simula proceso costoso de generación de alerta
+            time.sleep(5)  # Simula proceso costoso de generacion de alerta
 
             mensaje_alerta = (
                 f"ALERTA: '{producto['nombre']}' tiene stock {nuevo_stock} "
@@ -510,9 +488,7 @@ def registrar_movimiento():
             conn.close()
 
 
-# ─────────────────────────────────────────────
 # RUTA 4: Consultar stock actual de todos los productos (GET)
-# ─────────────────────────────────────────────
 @app.route("/stock", methods=["GET"])
 def consultar_stock():
     """Retorna la lista de todos los productos con su stock actual."""
@@ -537,14 +513,12 @@ def consultar_stock():
             conn.close()
 
 
-# ─────────────────────────────────────────────
-# RUTA 5: Ver alertas de reposición activas (GET)
-# ─────────────────────────────────────────────
+# RUTA 5: Ver alertas de reposicion activas (GET)
 @app.route("/alertas", methods=["GET"])
 def ver_alertas():
     """
-    Retorna las alertas de reposición no resueltas,
-    junto con la información del producto relacionado.
+    Retorna las alertas de reposicion no resueltas,
+    junto con la informacion del producto relacionado.
     """
     conn = None
     cursor = None
@@ -571,7 +545,7 @@ def ver_alertas():
         cursor.execute(sql)
         alertas = cursor.fetchall()
 
-        # Convertir timestamps a string para serialización JSON
+        # Convertir timestamps a string para serializacion JSON
         for alerta in alertas:
             if alerta.get("creado_en"):
                 alerta["creado_en"] = str(alerta["creado_en"])
@@ -588,12 +562,10 @@ def ver_alertas():
             conn.close()
 
 
-# ─────────────────────────────────────────────
 # RUTA 6: Marcar alerta como resuelta (POST)
-# ─────────────────────────────────────────────
 @app.route("/alertas/<int:alerta_id>/resolver", methods=["POST"])
 def resolver_alerta(alerta_id):
-    """Marca una alerta de reposición como resuelta."""
+    """Marca una alerta de reposicion como resuelta."""
     conn = None
     cursor = None
     try:
@@ -618,26 +590,24 @@ def resolver_alerta(alerta_id):
             conn.close()
 
 
-# ─────────────────────────────────────────────
 # RUTA 7: Detalle de un producto por ID (GET)
-# ─────────────────────────────────────────────
 @app.route("/productos/<int:producto_id>", methods=["GET"])
 def detalle_producto(producto_id):
-    """Retorna el detalle de un producto específico junto con sus últimos movimientos."""
+    """Retorna el detalle de un producto especifico junto con sus ultimos movimientos."""
     conn = None
     cursor = None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Obtener producto por ID con parámetro
+        # Obtener producto por ID con parametro
         cursor.execute("SELECT * FROM productos WHERE id = %s", (producto_id,))
         producto = cursor.fetchone()
 
         if not producto:
             return jsonify({"error": "Producto no encontrado"}), 404
 
-        # Obtener los últimos 10 movimientos del producto
+        # Obtener los ultimos 10 movimientos del producto
         cursor.execute(
             """SELECT tipo, cantidad, motivo, creado_en
                FROM movimientos WHERE producto_id = %s
@@ -665,8 +635,6 @@ def detalle_producto(producto_id):
             conn.close()
 
 
-# ─────────────────────────────────────────────
 # Punto de entrada
-# ─────────────────────────────────────────────
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
