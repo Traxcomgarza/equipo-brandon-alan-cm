@@ -33,91 +33,130 @@ def get_connection():
 
 
 # ─────────────────────────────────────────────
-# Plantilla HTML principal
+# Estilos y nav compartidos entre páginas
 # ─────────────────────────────────────────────
-HTML_TEMPLATE = """
+BASE_STYLES = """
+<style>
+    body { font-family: Arial, sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+    h1 { color: #2c3e50; }
+    h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 6px; }
+    table { width: 100%; border-collapse: collapse; background: white; margin-bottom: 30px; }
+    th { background: #3498db; color: white; padding: 10px; text-align: left; }
+    td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
+    tr:hover { background: #ecf0f1; }
+    .bajo { background: #ffe0e0 !important; }
+    form { background: white; padding: 20px; margin-bottom: 30px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    input, select { padding: 8px; margin: 4px 0 10px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    button { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #2980b9; }
+    nav { margin-bottom: 16px; }
+    nav a { margin-right: 16px; color: #3498db; text-decoration: none; font-weight: bold; }
+    nav a:hover { text-decoration: underline; }
+    .badge-alerta { background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+    .badge-ok { background: #27ae60; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+    .msg { font-weight: bold; margin-bottom: 10px; min-height: 20px; }
+    .msg.ok { color: #27ae60; }
+    .msg.err { color: #e74c3c; }
+</style>
+"""
+
+BASE_NAV = """
+<h1>&#128230; Sistema de Inventario &#8212; TechNova Solutions</h1>
+<nav>
+    <a href="/">&#127968; Inicio</a>
+    <a href="/stock-page">&#128202; Stock Actual</a>
+    <a href="/alertas-page">&#128680; Alertas</a>
+</nav>
+<hr>
+"""
+
+# ─────────────────────────────────────────────
+# Plantilla HTML — Página principal
+# ─────────────────────────────────────────────
+HTML_INDEX = """
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Inventario TechNova</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
-        h1 { color: #2c3e50; }
-        h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 6px; }
-        table { width: 100%; border-collapse: collapse; background: white; margin-bottom: 30px; }
-        th { background: #3498db; color: white; padding: 10px; text-align: left; }
-        td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
-        tr:hover { background: #ecf0f1; }
-        .bajo { background: #ffe0e0 !important; color: #c0392b; font-weight: bold; }
-        form { background: white; padding: 20px; margin-bottom: 30px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-        input, select { padding: 8px; margin: 4px 0 10px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        button:hover { background: #2980b9; }
-        .alerta-badge { background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
-        nav a { margin-right: 16px; color: #3498db; text-decoration: none; font-weight: bold; }
-    </style>
+    {styles}
 </head>
 <body>
-    <h1>📦 Sistema de Inventario — TechNova Solutions</h1>
-    <nav>
-        <a href="/">Inicio</a>
-        <a href="/stock">Stock Actual</a>
-        <a href="/alertas">Alertas</a>
-    </nav>
-    <hr>
+    {nav}
 
-    <!-- Formulario: Registrar producto -->
     <h2>Registrar Producto</h2>
     <form id="formProducto">
-        <input type="text"   id="nombre"      placeholder="Nombre del producto" required>
-        <input type="text"   id="categoria"   placeholder="Categoría" required>
-        <input type="number" id="precio"      placeholder="Precio" step="0.01" required>
-        <input type="number" id="cantidad"    placeholder="Cantidad inicial" required>
-        <input type="number" id="stock_min"   placeholder="Stock mínimo" required>
+        <input type="text"   id="nombre"    placeholder="Nombre del producto" required>
+        <input type="text"   id="categoria" placeholder="Categoria" required>
+        <input type="number" id="precio"    placeholder="Precio" step="0.01" min="0" required>
+        <input type="number" id="cantidad"  placeholder="Cantidad inicial" min="0" required>
+        <input type="number" id="stock_min" placeholder="Stock minimo" min="0" required>
         <button type="submit">Agregar Producto</button>
     </form>
+    <div id="msg_producto" class="msg"></div>
 
-    <!-- Formulario: Registrar movimiento -->
     <h2>Registrar Movimiento</h2>
     <form id="formMovimiento">
-        <input type="number" id="mov_producto_id" placeholder="ID del producto" required>
+        <select id="mov_producto_id" required>
+            <option value="">-- Selecciona un producto --</option>
+        </select>
         <select id="mov_tipo">
             <option value="entrada">Entrada</option>
             <option value="salida">Salida</option>
         </select>
-        <input type="number" id="mov_cantidad" placeholder="Cantidad" required>
+        <input type="number" id="mov_cantidad" placeholder="Cantidad" min="1" required>
         <input type="text"   id="mov_motivo"   placeholder="Motivo (opcional)">
         <button type="submit">Registrar Movimiento</button>
     </form>
-    <div id="msg_movimiento" style="color:green;font-weight:bold;"></div>
+    <div id="msg_movimiento" class="msg"></div>
 
-    <!-- Tabla de productos -->
     <h2>Productos Registrados</h2>
     <table>
-        <thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Cantidad</th><th>Stock Mín.</th></tr></thead>
+        <thead>
+            <tr><th>ID</th><th>Nombre</th><th>Categoria</th><th>Precio</th><th>Cantidad</th><th>Stock Min.</th><th>Estado</th></tr>
+        </thead>
         <tbody id="tablaProductos"></tbody>
     </table>
 
     <script>
-        // Cargar productos al iniciar
         async function cargarProductos() {
             const res = await fetch('/stock');
             const data = await res.json();
+
+            // Actualizar tabla
             const tbody = document.getElementById('tablaProductos');
             tbody.innerHTML = '';
             data.forEach(p => {
-                const bajo = p.cantidad <= p.stock_minimo ? 'bajo' : '';
-                tbody.innerHTML += `<tr class="${bajo}">
-                    <td>${p.id}</td><td>${p.nombre}</td><td>${p.categoria}</td>
-                    <td>$${p.precio}</td><td>${p.cantidad}</td><td>${p.stock_minimo}</td>
-                </tr>`;
+                const bajo = p.cantidad <= p.stock_minimo;
+                tbody.innerHTML += '<tr class="' + (bajo ? 'bajo' : '') + '">' +
+                    '<td>' + p.id + '</td>' +
+                    '<td>' + p.nombre + '</td>' +
+                    '<td>' + p.categoria + '</td>' +
+                    '<td>$' + parseFloat(p.precio).toFixed(2) + '</td>' +
+                    '<td>' + p.cantidad + '</td>' +
+                    '<td>' + p.stock_minimo + '</td>' +
+                    '<td>' + (bajo
+                        ? '<span class="badge-alerta">Bajo minimo</span>'
+                        : '<span class="badge-ok">OK</span>') + '</td>' +
+                    '</tr>';
             });
+
+            // Actualizar dropdown con productos existentes
+            const select = document.getElementById('mov_producto_id');
+            const valorActual = select.value;
+            select.innerHTML = '<option value="">-- Selecciona un producto --</option>';
+            data.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = '[' + p.id + '] ' + p.nombre + ' (stock: ' + p.cantidad + ')';
+                select.appendChild(opt);
+            });
+            if (valorActual) select.value = valorActual;
         }
 
-        // Registrar producto
         document.getElementById('formProducto').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const msgDiv = document.getElementById('msg_producto');
             const body = {
                 nombre:       document.getElementById('nombre').value,
                 categoria:    document.getElementById('categoria').value,
@@ -125,32 +164,162 @@ HTML_TEMPLATE = """
                 cantidad:     parseInt(document.getElementById('cantidad').value),
                 stock_minimo: parseInt(document.getElementById('stock_min').value),
             };
-            const res = await fetch('/productos', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+            const res = await fetch('/productos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
             const data = await res.json();
-            alert(data.mensaje || data.error);
-            if (res.ok) document.getElementById('formProducto').reset();
-            cargarProductos();
+            msgDiv.className = 'msg ' + (res.ok ? 'ok' : 'err');
+            msgDiv.textContent = data.mensaje || data.error;
+            if (res.ok) {
+                document.getElementById('formProducto').reset();
+                cargarProductos();
+            }
         });
 
-        // Registrar movimiento
         document.getElementById('formMovimiento').addEventListener('submit', async (e) => {
             e.preventDefault();
             const msgDiv = document.getElementById('msg_movimiento');
-            msgDiv.textContent = '⏳ Procesando movimiento...';
+            msgDiv.className = 'msg';
+            msgDiv.textContent = 'Procesando movimiento...';
             const body = {
                 producto_id: parseInt(document.getElementById('mov_producto_id').value),
                 tipo:        document.getElementById('mov_tipo').value,
                 cantidad:    parseInt(document.getElementById('mov_cantidad').value),
                 motivo:      document.getElementById('mov_motivo').value,
             };
-            const res = await fetch('/movimientos', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+            const res = await fetch('/movimientos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
             const data = await res.json();
+            msgDiv.className = 'msg ' + (res.ok ? 'ok' : 'err');
             msgDiv.textContent = data.mensaje || data.error;
-            if (res.ok) document.getElementById('formMovimiento').reset();
-            cargarProductos();
+            if (res.ok) {
+                document.getElementById('formMovimiento').reset();
+                cargarProductos();
+            }
         });
 
         cargarProductos();
+    </script>
+</body>
+</html>
+"""
+
+# ─────────────────────────────────────────────
+# Plantilla HTML — Página Stock Actual
+# ─────────────────────────────────────────────
+HTML_STOCK_PAGE = """
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Actual - TechNova</title>
+    {styles}
+</head>
+<body>
+    {nav}
+    <h2>Stock Actual</h2>
+    <p id="resumen" style="color:#555;"></p>
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Nombre</th><th>Categoria</th><th>Precio</th><th>Cantidad</th><th>Stock Min.</th><th>Estado</th></tr>
+        </thead>
+        <tbody id="tablaStock"></tbody>
+    </table>
+    <script>
+        async function cargarStock() {
+            const res = await fetch('/stock');
+            const data = await res.json();
+            const tbody = document.getElementById('tablaStock');
+            tbody.innerHTML = '';
+            let bajos = 0;
+            data.forEach(p => {
+                const bajo = p.cantidad <= p.stock_minimo;
+                if (bajo) bajos++;
+                tbody.innerHTML += '<tr class="' + (bajo ? 'bajo' : '') + '">' +
+                    '<td>' + p.id + '</td>' +
+                    '<td>' + p.nombre + '</td>' +
+                    '<td>' + p.categoria + '</td>' +
+                    '<td>$' + parseFloat(p.precio).toFixed(2) + '</td>' +
+                    '<td>' + p.cantidad + '</td>' +
+                    '<td>' + p.stock_minimo + '</td>' +
+                    '<td>' + (bajo
+                        ? '<span class="badge-alerta">Bajo minimo</span>'
+                        : '<span class="badge-ok">Normal</span>') + '</td>' +
+                    '</tr>';
+            });
+            document.getElementById('resumen').textContent =
+                'Total: ' + data.length + ' productos — ' + bajos + ' con stock bajo minimo';
+        }
+        cargarStock();
+    </script>
+</body>
+</html>
+"""
+
+# ─────────────────────────────────────────────
+# Plantilla HTML — Página Alertas
+# ─────────────────────────────────────────────
+HTML_ALERTAS_PAGE = """
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Alertas - TechNova</title>
+    {styles}
+    <style>
+        .btn-resolver {{ background: #27ae60; padding: 4px 10px; font-size: 12px; width: auto; }}
+        .btn-resolver:hover {{ background: #219a52; }}
+    </style>
+</head>
+<body>
+    {nav}
+    <h2>Alertas de Reposicion</h2>
+    <p id="resumen_alertas" style="color:#555;"></p>
+    <table>
+        <thead>
+            <tr><th>#</th><th>Producto</th><th>Categoria</th><th>Stock Actual</th><th>Stock Min.</th><th>Mensaje</th><th>Fecha</th><th>Accion</th></tr>
+        </thead>
+        <tbody id="tablaAlertas"></tbody>
+    </table>
+    <script>
+        async function cargarAlertas() {{
+            const res = await fetch('/alertas');
+            const data = await res.json();
+            const tbody = document.getElementById('tablaAlertas');
+            tbody.innerHTML = '';
+            if (data.length === 0) {{
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#27ae60;padding:20px;">No hay alertas activas</td></tr>';
+            }}
+            data.forEach(a => {{
+                tbody.innerHTML +=
+                    '<tr>' +
+                    '<td>' + a.alerta_id + '</td>' +
+                    '<td>' + a.producto + '</td>' +
+                    '<td>' + a.categoria + '</td>' +
+                    '<td><strong style="color:#e74c3c">' + a.stock_actual + '</strong></td>' +
+                    '<td>' + a.stock_minimo + '</td>' +
+                    '<td style="font-size:13px">' + a.mensaje + '</td>' +
+                    '<td style="font-size:12px">' + a.creado_en + '</td>' +
+                    '<td><button class="btn-resolver" onclick="resolver(' + a.alerta_id + ')">Resolver</button></td>' +
+                    '</tr>';
+            }});
+            document.getElementById('resumen_alertas').textContent =
+                data.length + ' alerta(s) activa(s)';
+        }}
+
+        async function resolver(id) {{
+            const res = await fetch('/alertas/' + id + '/resolver', {{ method: 'POST' }});
+            const data = await res.json();
+            if (res.ok) cargarAlertas();
+            else alert(data.error);
+        }}
+
+        cargarAlertas();
     </script>
 </body>
 </html>
@@ -163,7 +332,31 @@ HTML_TEMPLATE = """
 @app.route("/")
 def index():
     """Retorna la interfaz HTML del sistema de inventario."""
-    return render_template_string(HTML_TEMPLATE)
+    return render_template_string(
+        HTML_INDEX.format(styles=BASE_STYLES, nav=BASE_NAV)
+    )
+
+
+# ─────────────────────────────────────────────
+# RUTA 1b: Página de Stock Actual
+# ─────────────────────────────────────────────
+@app.route("/stock-page")
+def stock_page():
+    """Página HTML dedicada para visualizar el stock actual."""
+    return render_template_string(
+        HTML_STOCK_PAGE.format(styles=BASE_STYLES, nav=BASE_NAV)
+    )
+
+
+# ─────────────────────────────────────────────
+# RUTA 1c: Página de Alertas
+# ─────────────────────────────────────────────
+@app.route("/alertas-page")
+def alertas_page():
+    """Página HTML dedicada para visualizar y gestionar alertas."""
+    return render_template_string(
+        HTML_ALERTAS_PAGE.format(styles=BASE_STYLES, nav=BASE_NAV)
+    )
 
 
 # ─────────────────────────────────────────────
@@ -287,8 +480,8 @@ def registrar_movimiento():
 
             mensaje_alerta = (
                 f"ALERTA: '{producto['nombre']}' tiene stock {nuevo_stock} "
-                f"por debajo del mínimo de {producto['stock_minimo']} unidades. "
-                f"Se requiere reposición urgente."
+                f"por debajo del minimo de {producto['stock_minimo']} unidades. "
+                f"Se requiere reposicion urgente."
             )
 
             cursor.execute(
@@ -344,7 +537,7 @@ def consultar_stock():
 
 
 # ─────────────────────────────────────────────
-# RUTA 5: Ver productos bajo stock mínimo (GET)
+# RUTA 5: Ver alertas de reposición activas (GET)
 # ─────────────────────────────────────────────
 @app.route("/alertas", methods=["GET"])
 def ver_alertas():
@@ -395,7 +588,37 @@ def ver_alertas():
 
 
 # ─────────────────────────────────────────────
-# RUTA 6: Detalle de un producto por ID (GET)
+# RUTA 6: Marcar alerta como resuelta (POST)
+# ─────────────────────────────────────────────
+@app.route("/alertas/<int:alerta_id>/resolver", methods=["POST"])
+def resolver_alerta(alerta_id):
+    """Marca una alerta de reposición como resuelta."""
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("UPDATE alertas_reposicion SET resuelta = TRUE WHERE id = %s", (alerta_id,))
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Alerta no encontrada"}), 404
+
+        return jsonify({"mensaje": "Alerta marcada como resuelta"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+# ─────────────────────────────────────────────
+# RUTA 7: Detalle de un producto por ID (GET)
 # ─────────────────────────────────────────────
 @app.route("/productos/<int:producto_id>", methods=["GET"])
 def detalle_producto(producto_id):
