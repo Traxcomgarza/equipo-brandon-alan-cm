@@ -8,6 +8,10 @@ import os
 import time
 import mysql.connector
 from flask import Flask, request, jsonify, render_template_string
+from dotenv import load_dotenv
+
+# Cargar variables del archivo .env si existe
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -15,10 +19,10 @@ app = Flask(__name__)
 # Configuración de conexión a RDS desde variables de entorno
 # ─────────────────────────────────────────────
 DB_CONFIG = {
-    "host":     os.environ.get("DB_HOST", "localhost"),
-    "user":     os.environ.get("DB_USER", "admin"),
-    "password": os.environ.get("DB_PASSWORD", ""),
-    "database": os.environ.get("DB_NAME", "inventario_db"),
+    "host":     os.environ.get("DB_HOST"),
+    "user":     os.environ.get("DB_USER"),
+    "password": os.environ.get("DB_PASSWORD"),
+    "database": os.environ.get("DB_NAME"),
     "port":     int(os.environ.get("DB_PORT", 3306)),
 }
 
