@@ -130,7 +130,7 @@ HTML_INDEX = """
                     '<td>' + p.stock_minimo + '</td>' +
                     '<td>' + (bajo
                         ? '<span class="badge-alerta">Bajo minimo</span>'
-                        : '<span class="badge-ok">OK</span>') + '</td>' +
+                        : '<span class="badge-ok">Normal</span>') + '</td>' +
                     '</tr>';
             });
 
