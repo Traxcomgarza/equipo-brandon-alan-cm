@@ -128,6 +128,7 @@ HTML_TEMPLATE = """
             const res = await fetch('/productos', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
             const data = await res.json();
             alert(data.mensaje || data.error);
+            if (res.ok) document.getElementById('formProducto').reset();
             cargarProductos();
         });
 
@@ -145,6 +146,7 @@ HTML_TEMPLATE = """
             const res = await fetch('/movimientos', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
             const data = await res.json();
             msgDiv.textContent = data.mensaje || data.error;
+            if (res.ok) document.getElementById('formMovimiento').reset();
             cargarProductos();
         });
 
