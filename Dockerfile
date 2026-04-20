@@ -14,12 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py .
 
 # Las credenciales de BD se pasan como variables de entorno al correr el contenedor
-# Nunca se escriben en el código ni en la imagen
-ENV DB_HOST=""
-ENV DB_USER=""
-ENV DB_PASSWORD=""
-ENV DB_NAME="inventario_db"
-ENV DB_PORT="3306"
+# usando --env-file .env — nunca se escriben en el código ni en la imagen
 
 # Exponer el puerto de Flask
 EXPOSE 5000
